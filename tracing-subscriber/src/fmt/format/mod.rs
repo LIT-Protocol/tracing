@@ -407,6 +407,7 @@ pub struct Format<F = Full, T = SystemTime> {
     pub(crate) display_thread_name: bool,
     pub(crate) display_filename: bool,
     pub(crate) display_line_number: bool,
+    pub(crate) display_event_scope: bool,
 }
 
 // === impl Writer ===
@@ -585,6 +586,7 @@ impl Default for Format<Full, SystemTime> {
             display_thread_name: false,
             display_filename: false,
             display_line_number: false,
+            display_event_scope: true,
         }
     }
 }
@@ -605,6 +607,7 @@ impl<F, T> Format<F, T> {
             display_thread_name: self.display_thread_name,
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
+            display_event_scope: self.display_event_scope,
         }
     }
 
@@ -644,6 +647,7 @@ impl<F, T> Format<F, T> {
             display_thread_name: self.display_thread_name,
             display_filename: true,
             display_line_number: true,
+            display_event_scope: self.display_event_scope,
         }
     }
 
@@ -675,6 +679,7 @@ impl<F, T> Format<F, T> {
             display_thread_name: self.display_thread_name,
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
+            display_event_scope: self.display_event_scope,
         }
     }
 
@@ -704,6 +709,7 @@ impl<F, T> Format<F, T> {
             display_thread_name: self.display_thread_name,
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
+            display_event_scope: self.display_event_scope,
         }
     }
 
@@ -720,6 +726,7 @@ impl<F, T> Format<F, T> {
             display_thread_name: self.display_thread_name,
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
+            display_event_scope: self.display_event_scope,
         }
     }
 
@@ -787,6 +794,14 @@ impl<F, T> Format<F, T> {
     pub fn with_line_number(self, display_line_number: bool) -> Format<F, T> {
         Format {
             display_line_number,
+            ..self
+        }
+    }
+
+    /// Sets whether or not the scope of the event is displayed.
+    pub fn with_event_scope(self, display_event_scope: bool) -> Format<F, T> {
+        Format {
+            display_event_scope,
             ..self
         }
     }
@@ -944,26 +959,28 @@ where
 
         let dimmed = writer.dimmed();
 
-        if let Some(scope) = ctx.event_scope() {
-            let bold = writer.bold();
+        if self.display_event_scope {
+            if let Some(scope) = ctx.event_scope() {
+                let bold = writer.bold();
 
-            let mut seen = false;
+                let mut seen = false;
 
-            for span in scope.from_root() {
-                write!(writer, "{}", bold.paint(span.metadata().name()))?;
-                seen = true;
+                for span in scope.from_root() {
+                    write!(writer, "{}", bold.paint(span.metadata().name()))?;
+                    seen = true;
 
-                let ext = span.extensions();
-                if let Some(fields) = &ext.get::<FormattedFields<N>>() {
-                    if !fields.is_empty() {
-                        write!(writer, "{}{}{}", bold.paint("{"), fields, bold.paint("}"))?;
+                    let ext = span.extensions();
+                    if let Some(fields) = &ext.get::<FormattedFields<N>>() {
+                        if !fields.is_empty() {
+                            write!(writer, "{}{}{}", bold.paint("{"), fields, bold.paint("}"))?;
+                        }
                     }
+                    write!(writer, "{}", dimmed.paint(":"))?;
                 }
-                write!(writer, "{}", dimmed.paint(":"))?;
-            }
 
-            if seen {
-                writer.write_char(' ')?;
+                if seen {
+                    writer.write_char(' ')?;
+                }
             }
         };
 

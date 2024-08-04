@@ -813,6 +813,14 @@ impl<F, T> Format<F, T> {
         }
     }
 
+    /// When set, the provided string will be printed before each log message.
+    pub fn with_prefix_string(self, prefix_string: Option<String>) -> Format<F, T> {
+        Format {
+            prefix_string,
+            ..self
+        }
+    }
+
     /// Sets whether or not the source code location from which an event
     /// originated is displayed.
     ///

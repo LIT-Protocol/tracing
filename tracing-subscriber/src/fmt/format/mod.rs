@@ -408,6 +408,7 @@ pub struct Format<F = Full, T = SystemTime> {
     pub(crate) display_filename: bool,
     pub(crate) display_line_number: bool,
     pub(crate) display_event_scope: bool,
+    pub(crate) prefix_string: Option<String>,
 }
 
 // === impl Writer ===
@@ -587,6 +588,7 @@ impl Default for Format<Full, SystemTime> {
             display_filename: false,
             display_line_number: false,
             display_event_scope: true,
+            prefix_string: None,
         }
     }
 }
@@ -608,6 +610,7 @@ impl<F, T> Format<F, T> {
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
             display_event_scope: self.display_event_scope,
+            prefix_string: self.prefix_string,
         }
     }
 
@@ -648,6 +651,7 @@ impl<F, T> Format<F, T> {
             display_filename: true,
             display_line_number: true,
             display_event_scope: self.display_event_scope,
+            prefix_string: self.prefix_string,
         }
     }
 
@@ -680,6 +684,7 @@ impl<F, T> Format<F, T> {
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
             display_event_scope: self.display_event_scope,
+            prefix_string: self.prefix_string,
         }
     }
 
@@ -710,6 +715,7 @@ impl<F, T> Format<F, T> {
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
             display_event_scope: self.display_event_scope,
+            prefix_string: self.prefix_string,
         }
     }
 
@@ -727,6 +733,7 @@ impl<F, T> Format<F, T> {
             display_filename: self.display_filename,
             display_line_number: self.display_line_number,
             display_event_scope: self.display_event_scope,
+            prefix_string: self.prefix_string,
         }
     }
 
@@ -914,6 +921,10 @@ where
         let meta = normalized_meta.as_ref().unwrap_or_else(|| event.metadata());
         #[cfg(not(feature = "tracing-log"))]
         let meta = event.metadata();
+
+        if let Some(prefix) = &self.prefix_string {
+            write!(writer, "{} ", prefix)?;
+        }
 
         // if the `Format` struct *also* has an ANSI color configuration,
         // override the writer...the API for configuring ANSI color codes on the
